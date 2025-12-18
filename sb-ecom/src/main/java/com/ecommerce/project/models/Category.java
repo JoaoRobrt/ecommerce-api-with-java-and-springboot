@@ -1,26 +1,37 @@
 package com.ecommerce.project.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name = "categories")
+@Table(
+        name = "categories",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "category_name")
+        }
+)
 public class Category {
     @Id
     @GeneratedValue( strategy = GenerationType.IDENTITY)
     private Long categoryId;
 
-    @NotBlank(message = "Category name is required !!")
-    @Size(min = 4, max = 10, message = "Category name must be between 4 and 10 characters !!")
+    @Column(name = "category_name", nullable = false)
+    @NotBlank(message = "Category name is required.")
+    @Size(min = 4, max = 10, message = "Category name must be between 4 and 10 characters.")
     private String categoryName;
+
+    @PrePersist
+    @PreUpdate
+    private void normalize() {
+        this.categoryName = categoryName.trim().toLowerCase();
+    }
 
 }

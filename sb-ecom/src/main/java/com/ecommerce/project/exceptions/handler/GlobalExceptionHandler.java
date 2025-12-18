@@ -1,6 +1,7 @@
 package com.ecommerce.project.exceptions.handler;
 
 import com.ecommerce.project.exceptions.ExceptionResponse;
+import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
 import com.ecommerce.project.exceptions.ResourceNotFoudException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,23 @@ public class GlobalExceptionHandler {
             );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public final ResponseEntity<ExceptionResponse> handleAlreadyExists(
+            ResourceAlreadyExistsException e,
+            WebRequest request){
+
+        ExceptionResponse body = new ExceptionResponse(
+                new Date(),
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                e.getMessage(),
+                request.getDescription(false).replace("uri = ", ""),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     //ERRO INTERNO NÃO ESPERADO

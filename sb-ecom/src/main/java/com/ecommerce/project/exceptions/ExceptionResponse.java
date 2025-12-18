@@ -8,6 +8,6 @@ public record ExceptionResponse (Date timestamp,
                                  String error,
                                  String message,
                                  String path,
-                                 Map<String, String> validationErrors) {
+                                 Map<String, String> errors) {
 
 }
