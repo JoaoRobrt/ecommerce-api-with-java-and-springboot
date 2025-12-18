@@ -4,34 +4,68 @@ import com.ecommerce.project.exceptions.ExceptionResponse;
 import com.ecommerce.project.exceptions.ResourceNotFoudException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-@ControllerAdvice
-@RestController
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //Erro geral não esperado
-    @ExceptionHandler(Exception.class)
-    public final ResponseEntity<ExceptionResponse> handleAllExceptions(Exception e, WebRequest request) {
-        ExceptionResponse response = new ExceptionResponse(
+    @ExceptionHandler(ResourceNotFoudException.class)
+    public final ResponseEntity<ExceptionResponse> handleNotFoundException(ResourceNotFoudException e,
+                                                                           WebRequest request){
+        ExceptionResponse body = new ExceptionResponse(
                 new Date(),
-                e.getMessage() + ": Internal Server Error !!",
-                request.getDescription(false));
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                e.getMessage(),
+                request.getDescription(false).replace("uri=", ""),
+                null);
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
-    @ExceptionHandler(ResourceNotFoudException.class)
-    public final ResponseEntity<ExceptionResponse> handleNotFoundException(Exception e, WebRequest request){
-        ExceptionResponse response = new ExceptionResponse(
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationExceptions(
+            MethodArgumentNotValidException e,
+            WebRequest request) {
+
+        Map<String, String> errors = new HashMap<>();
+
+        e.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        ExceptionResponse body = new ExceptionResponse(
                 new Date(),
-                e.getMessage(),
-                request.getDescription(false));
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "Invalid request data. Please check the fields.",
+                request.getDescription(false).replace("uri=", ""),
+                errors
+            );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    //ERRO INTERNO NÃO ESPERADO
+    @ExceptionHandler(Exception.class)
+    public final ResponseEntity<ExceptionResponse> handleUnexpectedExceptions(Exception e, WebRequest request) {
+        ExceptionResponse body = new ExceptionResponse(
+                new Date(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                "Internal server error. Please try again later.",
+                request.getDescription(false).replace("uri=", ""),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
 }
