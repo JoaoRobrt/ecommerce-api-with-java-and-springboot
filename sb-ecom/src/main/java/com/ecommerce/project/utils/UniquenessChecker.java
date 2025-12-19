@@ -6,14 +6,23 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class UniquenessChecker {
+    /*
+     *
+     * @param name                nome que quer checkar
+     * @param findByNameFunc      função para encontrar pelo nome do repository
+     *                            ex: productRepository :: findByProductNameIgnoreCase
+     * @param <E>                 tipo da entidade
+     * @param <ID>                ID da entidade
+     * @param <entityName>        nome da classe da entidade ex: "Product" ou "Category"
+     *
+     * @return VOID
+     */
 
     public static  <E, ID> void checkNameUniqueness(
             String name,
             Function<String , Optional<E>> findByNameFunc,
             Function<E, ID>  getIdFunc,
-            ID currentId, // Para usar nas funçoes criar colocar null,
-                          // campo é apenas utilizado para verificar em updates
-
+            ID currentId,
             String entityName
     ){
         String normalized = SortUtils.normalize(name);
