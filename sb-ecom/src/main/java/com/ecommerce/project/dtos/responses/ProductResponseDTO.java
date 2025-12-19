@@ -1,6 +1,6 @@
 package com.ecommerce.project.dtos.responses;
 
-public record ProductResponseDTO (Long id,
+public record ProductResponseDTO (Long productId,
                                   String productName,
                                   String image,
                                   String description,

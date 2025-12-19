@@ -1,5 +1,6 @@
 package com.ecommerce.project.services;
 
+import com.ecommerce.project.config.AppConstants;
 import com.ecommerce.project.dtos.commoms.PageMetaDTO;
 import com.ecommerce.project.dtos.commoms.PageResponseDTO;
 import com.ecommerce.project.dtos.requests.CategoryRequestDTO;
@@ -9,6 +10,8 @@ import com.ecommerce.project.exceptions.ResourceNotFoudException;
 import com.ecommerce.project.mappers.CategoryMapper;
 import com.ecommerce.project.models.Category;
 import com.ecommerce.project.repositories.CategoryRepository;
+import com.ecommerce.project.utils.PaginationUtils;
+import com.ecommerce.project.utils.SortUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,44 +32,41 @@ public class CategoryServiceImpl implements CategoryService{
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("categoryName", "categoryId");
 
-
-    @Override
-    public PageResponseDTO<CategoryResponseDTO> findAll(Integer pageNumber, Integer pageSize,
-                                                        String sortBy, String sortOrder) {
-        String validatedSortBy = validateSortBy(sortBy);
-        Sort.Direction direction = resolveSortOrder(sortOrder);
-
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, Sort.by(direction, validatedSortBy));
-
-        Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
-
-        List<CategoryResponseDTO> content = categoryPage.getContent()
-                .stream()
-                .map(categoryMapper :: toResponse)
-                .toList();
-
-        PageMetaDTO meta = new PageMetaDTO(
-                categoryPage.getNumber(),
-                categoryPage.getSize(),
-                categoryPage.getTotalElements(),
-                categoryPage.getTotalPages(),
-                categoryPage.isFirst(),
-                categoryPage.isLast()
-                );
-
-        return new PageResponseDTO<>(content, meta);
-
-    }
-
     @Override
     public CategoryResponseDTO create(CategoryRequestDTO dto) {
         Category category = categoryMapper.toEntity(dto);
 
         String categoryName = dto.categoryName();
-        checkCategoryNameUniqueness(categoryName);
+        checkNameUniqueness(categoryName);
 
         Category saved = categoryRepository.save(category);
         return categoryMapper.toResponse(saved);
+    }
+
+    @Override
+    public PageResponseDTO<CategoryResponseDTO> findAll(Integer pageNumber, Integer pageSize,
+                                                        String sortBy, String sortOrder) {
+
+        Sort sort = SortUtils.buildSort(sortBy,sortOrder, SORTABLE_FIELDS, AppConstants.SORT_PRODUCTS_BY);
+
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sort);
+
+        Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
+
+        return PaginationUtils.toPageResponseDTO(categoryPage, categoryMapper :: toResponse);
+
+    }
+
+    @Override
+    public CategoryResponseDTO update(Long categoryId,CategoryRequestDTO dto) {
+        Category category = findById(categoryId);
+
+        checkNameUniqueness(categoryId, dto.categoryName());
+
+        categoryMapper.updateEntityFromDto(dto, category);
+        Category updated = categoryRepository.save(category);
+
+        return categoryMapper.toResponse(updated);
     }
 
     @Override
@@ -76,18 +76,6 @@ public class CategoryServiceImpl implements CategoryService{
         return categoryMapper.toResponse(foundedCategory);
     }
 
-    @Override
-    public CategoryResponseDTO update(Long categoryId,CategoryRequestDTO dto) {
-        Category category = findById(categoryId);
-
-        checkCategoryNameUniqueness(categoryId, dto.categoryName());
-
-        categoryMapper.updateEntityFromDto(dto, category);
-        Category updated = categoryRepository.save(category);
-
-        return categoryMapper.toResponse(updated);
-    }
-
     //METODOS INTERNOS
 
     public Category findById(Long categoryId) {
@@ -95,15 +83,15 @@ public class CategoryServiceImpl implements CategoryService{
                 .orElseThrow(() -> new ResourceNotFoudException("Category Not Found."));
     }
 
-    private void checkCategoryNameUniqueness(String categoryName){
-        String normalized = normalize(categoryName);
+    private void checkNameUniqueness(String categoryName){
+        String normalized = SortUtils.normalize(categoryName);
         categoryRepository.findByCategoryNameIgnoreCase(normalized).ifPresent( c -> {
             throw new ResourceAlreadyExistsException("Category with name '" + normalized + "' already exists.");
         });
     }
 
-    private void checkCategoryNameUniqueness(Long categoryId, String categoryName) {
-        String normalized = normalize(categoryName);
+    private void checkNameUniqueness(Long categoryId, String categoryName) {
+        String normalized = SortUtils.normalize(categoryName);
         categoryRepository.findByCategoryNameIgnoreCase(normalized)
                 .ifPresent(existing -> {
                     if (!existing.getCategoryId().equals(categoryId)) {
@@ -114,20 +102,5 @@ public class CategoryServiceImpl implements CategoryService{
                 });
     }
 
-    private String normalize(String categoryName) {
-        return categoryName.trim().toLowerCase();
-    }
-    private String validateSortBy(String sortBy){
-        if (!SORTABLE_FIELDS.contains(sortBy)){
-            throw new IllegalArgumentException("Invalid sort field: " + sortBy);
-        }
-        return sortBy;
-    }
-
-    private Sort.Direction resolveSortOrder(String sortOrder) {
-        return "desc".equalsIgnoreCase(sortOrder)
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
-    }
 
 }

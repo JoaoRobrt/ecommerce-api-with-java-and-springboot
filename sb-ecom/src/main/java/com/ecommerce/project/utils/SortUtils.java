@@ -24,4 +24,9 @@ public final class SortUtils {
         return Sort.by(direction, field);
     }
 
+    public static String normalize(String name) {
+        return name.trim().toLowerCase();
+    }
+
+
 }

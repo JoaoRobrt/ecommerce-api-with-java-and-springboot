@@ -21,13 +21,13 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping("/public/category")
-    public ResponseEntity<ApiResponse<PageResponseDTO<CategoryResponseDTO>>> getAllCategories(
+    public ResponseEntity<ApiResponse<PageResponseDTO<CategoryResponseDTO>>> getAllCategories(@Valid
     @RequestParam(name = "pageNumber", defaultValue = AppConstants.PAGE_NUMBER) @Min(0)Integer pageNumber,
     @RequestParam(name = "pageSize", defaultValue = AppConstants.PAGE_SIZE )@Min(1) Integer pageSize,
     @RequestParam(name = "sortBy", defaultValue = AppConstants.SORT_CATEGORIES_BY) String sortBy,
     @RequestParam(name = "sortOrder", defaultValue = AppConstants.SORT_DIR) String sortOrder) {
-        PageResponseDTO<CategoryResponseDTO> categories = categoryService.findAll(pageNumber, pageSize, sortBy, sortOrder);
-        return ResponseEntity.ok(ApiResponse.success( "Categories retrieved successfully", categories));
+        PageResponseDTO<CategoryResponseDTO> page = categoryService.findAll(pageNumber, pageSize, sortBy, sortOrder);
+        return ResponseEntity.ok(ApiResponse.success( "Categories retrieved successfully", page));
     }
 
     @PostMapping("/admin/category")
