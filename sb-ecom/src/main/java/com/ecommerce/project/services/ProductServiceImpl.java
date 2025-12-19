@@ -1,11 +1,9 @@
 package com.ecommerce.project.services;
 
 import com.ecommerce.project.config.AppConstants;
-import com.ecommerce.project.dtos.commoms.PageMetaDTO;
 import com.ecommerce.project.dtos.commoms.PageResponseDTO;
 import com.ecommerce.project.dtos.requests.ProductRequestDTO;
 import com.ecommerce.project.dtos.responses.ProductResponseDTO;
-import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
 import com.ecommerce.project.exceptions.ResourceNotFoudException;
 import com.ecommerce.project.mappers.ProductMapper;
 import com.ecommerce.project.models.Category;
@@ -13,15 +11,12 @@ import com.ecommerce.project.models.Product;
 import com.ecommerce.project.repositories.ProductRepository;
 import com.ecommerce.project.utils.PageableUtils;
 import com.ecommerce.project.utils.PaginationUtils;
-import com.ecommerce.project.utils.SortUtils;
+import com.ecommerce.project.utils.UniquenessChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -39,7 +34,15 @@ public class ProductServiceImpl implements ProductService{
     @Override
     public ProductResponseDTO addProduct(Long categoryId, ProductRequestDTO dto) {
         Product product = productMapper.toEntity(dto);
-        checkNameUniqueness(product.getProductName());
+
+        UniquenessChecker.checkNameUniqueness(
+                product.getProductName(),
+                productRepository::findByProductNameIgnoreCase,
+                Product::getProductId,
+                null,
+                "Category"
+        );
+
         Category category = categoryService.findById(categoryId);
 
         product.setImage("defaul.png");
@@ -74,31 +77,54 @@ public class ProductServiceImpl implements ProductService{
         return PaginationUtils.toPageResponseDTO(productPage, productMapper :: toResponse);
     }
 
+    @Override
+    public PageResponseDTO<ProductResponseDTO> searchByKeyword(String keyword, Integer pageNumber,
+                                                               Integer pageSize, String sortBy, String sortOrder) {
 
+        Pageable pageable = PageableUtils.createPageable(pageNumber, pageSize, sortBy, sortOrder,
+                SORTABLE_FIELDS, AppConstants.SORT_PRODUCTS_BY);
+
+        String keywordPattern = "%" + keyword.toLowerCase() + "%";
+
+        Page<Product> productPage = productRepository.findByProductNameLikeIgnoreCase(keywordPattern, pageable);
+
+        return PaginationUtils.toPageResponseDTO(productPage, productMapper :: toResponse);
+    }
+
+    @Override
+    public ProductResponseDTO update(Long productId, ProductRequestDTO dto) {
+        Product product = findById(productId);
+
+        UniquenessChecker.checkNameUniqueness(
+                dto.productName(),
+                productRepository :: findByProductNameIgnoreCase,
+                Product :: getProductId,
+                productId,
+                "Product"
+        );
+
+        product.setProductName(dto.productName());
+        product.setImage(dto.image());
+        product.setDescription(dto.description());
+        product.setQuantity(dto.quantity());
+        product.setPrice(dto.price());
+        product.setDiscount(dto.discount());
+
+        Product saved = productRepository.save(product);
+
+        return productMapper.toResponse(saved);
+    }
+
+    @Override
+    public ProductResponseDTO delete(Long productId) {
+        Product foundedProduct = findById(productId);
+        productRepository.delete(foundedProduct);
+        return productMapper.toResponse(foundedProduct);
+    }
+    
     public Product findById(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoudException("Product Not Found."));
     }
-
-    private void checkNameUniqueness(String productName){
-        String normalized = SortUtils.normalize(productName);
-        productRepository.findByProductNameIgnoreCase(normalized).ifPresent( c -> {
-            throw new ResourceAlreadyExistsException("Product with name '" + normalized + "' already exists.");
-        });
-    }
-
-    private void checkNameUniqueness(Long productId, String productName) {
-        String normalized = SortUtils.normalize(productName);
-        productRepository.findByProductNameIgnoreCase(normalized)
-                .ifPresent(existing -> {
-                    if (!existing.getProductId().equals(productId)) {
-                        throw new ResourceAlreadyExistsException(
-                                "Product with name '" + normalized + "' already exists."
-                        );
-                    }
-                });
-    }
-
-
 
 }

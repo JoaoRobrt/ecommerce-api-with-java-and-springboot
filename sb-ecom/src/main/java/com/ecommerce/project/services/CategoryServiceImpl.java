@@ -1,17 +1,16 @@
 package com.ecommerce.project.services;
 
 import com.ecommerce.project.config.AppConstants;
-import com.ecommerce.project.dtos.commoms.PageMetaDTO;
 import com.ecommerce.project.dtos.commoms.PageResponseDTO;
 import com.ecommerce.project.dtos.requests.CategoryRequestDTO;
 import com.ecommerce.project.dtos.responses.CategoryResponseDTO;
-import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
 import com.ecommerce.project.exceptions.ResourceNotFoudException;
 import com.ecommerce.project.mappers.CategoryMapper;
 import com.ecommerce.project.models.Category;
 import com.ecommerce.project.repositories.CategoryRepository;
 import com.ecommerce.project.utils.PaginationUtils;
 import com.ecommerce.project.utils.SortUtils;
+import com.ecommerce.project.utils.UniquenessChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -37,7 +35,14 @@ public class CategoryServiceImpl implements CategoryService{
         Category category = categoryMapper.toEntity(dto);
 
         String categoryName = dto.categoryName();
-        checkNameUniqueness(categoryName);
+
+        UniquenessChecker.checkNameUniqueness(
+                categoryName,
+                categoryRepository::findByCategoryNameIgnoreCase,
+                Category::getCategoryId,
+                null,
+                "Category"
+        );
 
         Category saved = categoryRepository.save(category);
         return categoryMapper.toResponse(saved);
@@ -61,7 +66,13 @@ public class CategoryServiceImpl implements CategoryService{
     public CategoryResponseDTO update(Long categoryId,CategoryRequestDTO dto) {
         Category category = findById(categoryId);
 
-        checkNameUniqueness(categoryId, dto.categoryName());
+        UniquenessChecker.checkNameUniqueness(
+                category.getCategoryName(),
+                categoryRepository::findByCategoryNameIgnoreCase,
+                Category::getCategoryId,
+                categoryId,
+                "Category"
+        );
 
         categoryMapper.updateEntityFromDto(dto, category);
         Category updated = categoryRepository.save(category);
@@ -81,25 +92,6 @@ public class CategoryServiceImpl implements CategoryService{
     public Category findById(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoudException("Category Not Found."));
-    }
-
-    private void checkNameUniqueness(String categoryName){
-        String normalized = SortUtils.normalize(categoryName);
-        categoryRepository.findByCategoryNameIgnoreCase(normalized).ifPresent( c -> {
-            throw new ResourceAlreadyExistsException("Category with name '" + normalized + "' already exists.");
-        });
-    }
-
-    private void checkNameUniqueness(Long categoryId, String categoryName) {
-        String normalized = SortUtils.normalize(categoryName);
-        categoryRepository.findByCategoryNameIgnoreCase(normalized)
-                .ifPresent(existing -> {
-                    if (!existing.getCategoryId().equals(categoryId)) {
-                        throw new ResourceAlreadyExistsException(
-                                "Category with name '" + normalized + "' already exists."
-                        );
-                    }
-                });
     }
 
 
