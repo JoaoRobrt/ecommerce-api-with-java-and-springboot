@@ -1,50 +1,87 @@
 package com.ecommerce.project.services;
 
+import com.ecommerce.project.dtos.commoms.PageMetaDTO;
+import com.ecommerce.project.dtos.commoms.PageResponseDTO;
+import com.ecommerce.project.dtos.requests.CategoryRequestDTO;
+import com.ecommerce.project.dtos.responses.CategoryResponseDTO;
 import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
 import com.ecommerce.project.exceptions.ResourceNotFoudException;
+import com.ecommerce.project.mappers.CategoryMapper;
 import com.ecommerce.project.models.Category;
 import com.ecommerce.project.repositories.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService{
 
-    private final CategoryRepository categoryRepository;
+    private  final CategoryMapper categoryMapper;
+
+    private  final CategoryRepository categoryRepository;
 
     @Override
-    public List<Category> findAll() {
-        return categoryRepository.findAll();
+    public PageResponseDTO<CategoryResponseDTO> findAll(Integer pageNumber, Integer pageSize,
+                                                        String sortBy, String sortOrder) {
+        Sort sortByandOrder = sortOrder.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByandOrder);
+
+        Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
+
+        List<CategoryResponseDTO> content = categoryPage.getContent()
+                .stream()
+                .map(categoryMapper :: toResponse)
+                .toList();
+
+        PageMetaDTO meta = new PageMetaDTO(
+                categoryPage.getNumber(),
+                categoryPage.getSize(),
+                categoryPage.getTotalPages(),
+                categoryPage.getTotalPages(),
+                categoryPage.isFirst(),
+                categoryPage.isLast()
+                );
+
+        return new PageResponseDTO<>(content, meta);
+
     }
 
     @Override
-    public Category create(Category category) {
-        String categoryName = category.getCategoryName();
+    public CategoryResponseDTO create(CategoryRequestDTO dto) {
+        Category category = categoryMapper.toEntity(dto);
+
+        String categoryName = dto.categoryName();
         checkCategoryNameUniqueness(categoryName);
-        category.setCategoryName(categoryName);
-        return categoryRepository.save(category);
+
+        Category saved = categoryRepository.save(category);
+        return categoryMapper.toResponse(saved);
     }
 
     @Override
-    public String delete(Long categoryId){
+    public CategoryResponseDTO delete(Long categoryId){
         Category foundedCategory = findById(categoryId);
         categoryRepository.delete(foundedCategory);
-        return "Category with id: " + categoryId + " deleted successfully.";
+        return categoryMapper.toResponse(foundedCategory);
     }
 
     @Override
-    public Category update(Long categoryId,Category category) {
-        Category categoryToUpdate = findById(categoryId);
+    public CategoryResponseDTO update(Long categoryId,CategoryRequestDTO dto) {
+        Category category = findById(categoryId);
 
-        String categoryName = category.getCategoryName();
-        checkCategoryNameUniqueness(categoryId, categoryName);
+        checkCategoryNameUniqueness(categoryId, dto.categoryName());
 
-        categoryToUpdate.setCategoryName(categoryName);
-        return categoryRepository.save(categoryToUpdate);
+        categoryMapper.updateEntityFromDto(dto, category);
+        Category updated = categoryRepository.save(category);
+
+        return categoryMapper.toResponse(updated);
     }
 
     //METODOS INTERNOS
