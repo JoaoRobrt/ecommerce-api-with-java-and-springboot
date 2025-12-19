@@ -90,7 +90,7 @@ public class CategoryServiceImpl implements CategoryService{
 
     //METODOS INTERNOS
 
-    private Category findById(Long categoryId) {
+    public Category findById(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoudException("Category Not Found."));
     }

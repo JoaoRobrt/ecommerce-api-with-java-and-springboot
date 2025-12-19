@@ -5,11 +5,10 @@ import com.ecommerce.project.dtos.requests.CategoryRequestDTO;
 import com.ecommerce.project.dtos.responses.CategoryResponseDTO;
 import com.ecommerce.project.models.Category;
 
-import java.util.List;
-
 
 public interface CategoryService {
 
+    Category findById(Long categoryId);
     PageResponseDTO<CategoryResponseDTO> findAll(Integer pageNumber,
                                                  Integer pageSize,
                                                  String sortBy,
