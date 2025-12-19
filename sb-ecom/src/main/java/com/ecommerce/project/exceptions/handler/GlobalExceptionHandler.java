@@ -3,7 +3,9 @@ package com.ecommerce.project.exceptions.handler;
 import com.ecommerce.project.exceptions.ExceptionResponse;
 import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
 import com.ecommerce.project.exceptions.ResourceNotFoudException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,71 +20,64 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoudException.class)
-    public final ResponseEntity<ExceptionResponse> handleNotFoundException(ResourceNotFoudException e,
-                                                                           WebRequest request){
-        ExceptionResponse body = new ExceptionResponse(
-                new Date(),
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                e.getMessage(),
-                request.getDescription(false).replace("uri=", ""),
-                null);
+    public final ProblemDetail handleNotFound(ResourceNotFoudException e){
 
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle("Resource not found");
+        problem.setDetail(e.getMessage());
+
+        return problem;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationExceptions(
-            MethodArgumentNotValidException e,
-            WebRequest request) {
+    public ProblemDetail handleValidation(MethodArgumentNotValidException e) {
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Validation failed");
+        problem.setDetail("One or more fields are invalid.");
 
         Map<String, String> errors = new HashMap<>();
-
         e.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
 
-        ExceptionResponse body = new ExceptionResponse(
-                new Date(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                "Invalid request data. Please check the fields.",
-                request.getDescription(false).replace("uri=", ""),
-                errors
-            );
+        problem.setProperty("errors", errors);
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        return problem;
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public final ResponseEntity<ExceptionResponse> handleAlreadyExists(
-            ResourceAlreadyExistsException e,
-            WebRequest request){
+    public final ProblemDetail handleConflict(ResourceAlreadyExistsException e){
 
-        ExceptionResponse body = new ExceptionResponse(
-                new Date(),
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                e.getMessage(),
-                request.getDescription(false).replace("uri = ", ""),
-                null
-        );
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setTitle("Resource conflict");
+        problem.setDetail(e.getMessage());
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        return problem;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemDetail> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Invalid request parameter");
+        problem.setDetail(ex.getMessage());
+        problem.setProperty("path", request.getRequestURI());
+
+        return ResponseEntity.badRequest().body(problem);
     }
 
     //ERRO INTERNO NÃO ESPERADO
     @ExceptionHandler(Exception.class)
-    public final ResponseEntity<ExceptionResponse> handleUnexpectedExceptions(Exception e, WebRequest request) {
-        ExceptionResponse body = new ExceptionResponse(
-                new Date(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "Internal server error. Please try again later.",
-                request.getDescription(false).replace("uri=", ""),
-                null
-        );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    public final ProblemDetail handleUnexpected(Exception e) {
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        problem.setTitle("Internal server error");
+        problem.setDetail("An unexpected error occurred, please try again later");
+
+        return problem;
     }
 
 }

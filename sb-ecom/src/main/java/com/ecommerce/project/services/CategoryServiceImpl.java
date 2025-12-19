@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +27,16 @@ public class CategoryServiceImpl implements CategoryService{
 
     private  final CategoryRepository categoryRepository;
 
+    private static final Set<String> SORTABLE_FIELDS = Set.of("categoryName", "categoryId");
+
+
     @Override
     public PageResponseDTO<CategoryResponseDTO> findAll(Integer pageNumber, Integer pageSize,
                                                         String sortBy, String sortOrder) {
-        Sort sortByandOrder = sortOrder.equalsIgnoreCase("asc")
-                ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        String validatedSortBy = validateSortBy(sortBy);
+        Sort.Direction direction = resolveSortOrder(sortOrder);
 
-        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByandOrder);
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, Sort.by(direction, validatedSortBy));
 
         Page<Category> categoryPage = categoryRepository.findAll(pageDetails);
 
@@ -44,7 +48,7 @@ public class CategoryServiceImpl implements CategoryService{
         PageMetaDTO meta = new PageMetaDTO(
                 categoryPage.getNumber(),
                 categoryPage.getSize(),
-                categoryPage.getTotalPages(),
+                categoryPage.getTotalElements(),
                 categoryPage.getTotalPages(),
                 categoryPage.isFirst(),
                 categoryPage.isLast()
@@ -112,6 +116,18 @@ public class CategoryServiceImpl implements CategoryService{
 
     private String normalize(String categoryName) {
         return categoryName.trim().toLowerCase();
+    }
+    private String validateSortBy(String sortBy){
+        if (!SORTABLE_FIELDS.contains(sortBy)){
+            throw new IllegalArgumentException("Invalid sort field: " + sortBy);
+        }
+        return sortBy;
+    }
+
+    private Sort.Direction resolveSortOrder(String sortOrder) {
+        return "desc".equalsIgnoreCase(sortOrder)
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
     }
 
 }

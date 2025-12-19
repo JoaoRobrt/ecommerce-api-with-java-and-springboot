@@ -14,7 +14,6 @@ public interface CategoryService {
                                                  Integer pageSize,
                                                  String sortBy,
                                                  String sortOrder);
-
     CategoryResponseDTO create(CategoryRequestDTO dto);
     CategoryResponseDTO delete(Long categoryId);
     CategoryResponseDTO update(Long categoryId,CategoryRequestDTO dto);
