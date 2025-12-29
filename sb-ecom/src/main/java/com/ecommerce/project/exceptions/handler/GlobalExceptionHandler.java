@@ -1,18 +1,16 @@
 package com.ecommerce.project.exceptions.handler;
 
-import com.ecommerce.project.exceptions.ExceptionResponse;
 import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
 import com.ecommerce.project.exceptions.ResourceNotFoudException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +38,26 @@ public class GlobalExceptionHandler {
         e.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
+
+        problem.setProperty("errors", errors);
+
+        return problem;
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ProblemDetail handleConstraintViolation(ConstraintViolationException e) {
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle("Invalid argument");
+        problem.setDetail("One or more validation errors occurred.");
+
+        Map<String, String> errors = new HashMap<>();
+
+        e.getConstraintViolations().forEach(violation -> {
+            String field = violation.getPropertyPath().toString();
+            String message = violation.getMessage();
+            errors.put(field, message);
+        });
 
         problem.setProperty("errors", errors);
 
