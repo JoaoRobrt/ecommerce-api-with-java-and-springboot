@@ -3,7 +3,6 @@ package com.ecommerce.project.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 @Entity
 @Getter @Setter
@@ -41,7 +40,7 @@ public class Product {
 
     @ManyToOne
     @JoinColumn(name = "seller_id")
-    private UserEntity user;
+    private User user;
 
     public void updateSpecialPrice() {
         if (this.price != null && this.discount != null) {
