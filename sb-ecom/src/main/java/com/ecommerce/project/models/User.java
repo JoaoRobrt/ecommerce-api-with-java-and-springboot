@@ -38,7 +38,7 @@ public class User {
     private String email;
 
     @NotBlank
-    @Size(max = 120)
+    @Size(min = 6, message = "Password must have atleat 6 characters")
     @Column(name = "password")
     private String password;
 
@@ -60,5 +60,9 @@ public class User {
     private Set<Product> products = new HashSet<>();
 
 
-
+    public User(String username,String email,String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
 }

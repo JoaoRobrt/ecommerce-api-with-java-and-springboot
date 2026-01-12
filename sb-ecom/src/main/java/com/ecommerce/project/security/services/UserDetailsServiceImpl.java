@@ -1,6 +1,5 @@
 package com.ecommerce.project.security.services;
 
-import com.ecommerce.project.exceptions.ResourceNotFoudException;
 import com.ecommerce.project.models.User;
 import com.ecommerce.project.repositories.UserRepository;
 import jakarta.transaction.Transactional;

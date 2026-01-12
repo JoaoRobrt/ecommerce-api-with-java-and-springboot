@@ -1,7 +1,7 @@
 package com.ecommerce.project.exceptions.handler;
 
 import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
-import com.ecommerce.project.exceptions.ResourceNotFoudException;
+import com.ecommerce.project.exceptions.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -17,8 +17,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoudException.class)
-    public final ProblemDetail handleNotFound(ResourceNotFoudException e){
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public final ProblemDetail handleNotFound(ResourceNotFoundException e){
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
         problem.setTitle("Resource not found");

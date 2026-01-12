@@ -1,17 +1,20 @@
-package com.ecommerce.project.services;
+package com.ecommerce.project.services.impl;
 
 import com.ecommerce.project.config.AppConstants;
 import com.ecommerce.project.dtos.commoms.PageResponseDTO;
 import com.ecommerce.project.dtos.requests.ProductRequestDTO;
 import com.ecommerce.project.dtos.responses.ProductResponseDTO;
-import com.ecommerce.project.exceptions.ResourceNotFoudException;
+import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
+import com.ecommerce.project.exceptions.ResourceNotFoundException;
 import com.ecommerce.project.mappers.ProductMapper;
 import com.ecommerce.project.models.Category;
 import com.ecommerce.project.models.Product;
 import com.ecommerce.project.repositories.ProductRepository;
+import com.ecommerce.project.services.CategoryService;
+import com.ecommerce.project.services.FileService;
+import com.ecommerce.project.services.ProductService;
 import com.ecommerce.project.utils.PageableUtils;
 import com.ecommerce.project.utils.PaginationUtils;
-import com.ecommerce.project.utils.UniquenessChecker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -19,16 +22,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Set;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ProductServiceImpl implements ProductService{
+public class ProductServiceImpl implements ProductService {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("productName", "productId", "price", "discount");
 
@@ -47,13 +46,9 @@ public class ProductServiceImpl implements ProductService{
     public ProductResponseDTO addProduct(Long categoryId, ProductRequestDTO dto) {
         Product product = productMapper.toEntity(dto);
 
-        UniquenessChecker.checkNameUniqueness(
-                product.getProductName(),
-                productRepository::findByProductNameIgnoreCase,
-                Product::getProductId,
-                null,
-                "Product"
-        );
+        if (productRepository.existsByProductName(product.getProductName())){
+            throw new ResourceAlreadyExistsException("Product name is already taken.");
+        }
 
         Category category = categoryService.findById(categoryId);
 
@@ -112,13 +107,9 @@ public class ProductServiceImpl implements ProductService{
     public ProductResponseDTO update(Long productId, ProductRequestDTO dto) {
         Product product = findById(productId);
 
-        UniquenessChecker.checkNameUniqueness(
-                dto.productName(),
-                productRepository :: findByProductNameIgnoreCase,
-                Product :: getProductId,
-                productId,
-                "Product"
-        );
+        if (productRepository.existsByProductNameAndProductIdNot(product.getProductName(), productId)){
+            throw new ResourceAlreadyExistsException("Product name is already taken.");
+        }
 
         product.setProductName(dto.productName());
         product.setImage(dto.image());
@@ -155,7 +146,7 @@ public class ProductServiceImpl implements ProductService{
 
     public Product findById(Long productId) {
         return productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoudException("Product Not Found."));
+                .orElseThrow(() -> new ResourceNotFoundException("Product Not Found."));
     }
 
 }
