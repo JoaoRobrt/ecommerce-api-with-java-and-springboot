@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
@@ -35,6 +36,10 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @ManyToOne
+    @JoinColumn(name = "seller_id")
+    private UserEntity user;
 
     public void updateSpecialPrice() {
         if (this.price != null && this.discount != null) {
