@@ -1,17 +1,18 @@
 package com.ecommerce.project.models;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "addresses")
-@RequiredArgsConstructor
+@AllArgsConstructor
 @NoArgsConstructor
 public class Address {
 
@@ -41,6 +42,7 @@ public class Address {
     @Size(min = 6, message = "Zipcode name must be atleast 6 characters")
     private String zipCode;
 
+    @ToString.Exclude
     @ManyToMany(mappedBy = "addresses")
     private List<UserEntity> users = new ArrayList<>();
 }

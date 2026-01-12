@@ -10,6 +10,8 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+@Table(name = "products")
+@ToString
 public class Product {
 
     @Id

@@ -54,7 +54,8 @@ public class UserEntity {
                 inverseJoinColumns = @JoinColumn(name = "address_id"))
     private List<Address> addresses = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user_id", cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+    @ToString.Exclude
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE},
                 orphanRemoval = true)
     private Set<Product> products = new HashSet<>();
 
