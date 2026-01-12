@@ -8,7 +8,7 @@ import java.util.function.Function;
 public class UniquenessChecker {
     /*
      *
-     * @param name                nome que quer checkar
+     * @param name                nome que quer verificar
      * @param findByNameFunc      função para encontrar pelo nome do repository
      *                            ex: productRepository :: findByProductNameIgnoreCase
      * @param <E>                 tipo da entidade

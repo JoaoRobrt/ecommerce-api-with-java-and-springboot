@@ -1,4 +1,7 @@
 spring:
+  app:
+    jwtSecret: mySecretKey32134291067adbcAADLSOAmadnZXCvjhsasdZXCVasdfasda
+    jwtExpirationMs: 86400000
   application:
     name: sb-ecom
 
@@ -20,3 +23,5 @@ spring:
 #      hibernate:
 #        ddl-auto: none
 #        format_sql: true
+project:
+  image: images/

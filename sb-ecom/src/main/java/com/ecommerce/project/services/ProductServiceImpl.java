@@ -13,11 +13,18 @@ import com.ecommerce.project.utils.PageableUtils;
 import com.ecommerce.project.utils.PaginationUtils;
 import com.ecommerce.project.utils.UniquenessChecker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +38,11 @@ public class ProductServiceImpl implements ProductService{
 
     private final CategoryService categoryService;
 
+    private final FileService fileService;
+
+    @Value("${project.image}")
+    private String path;
+
     @Override
     public ProductResponseDTO addProduct(Long categoryId, ProductRequestDTO dto) {
         Product product = productMapper.toEntity(dto);
@@ -40,12 +52,17 @@ public class ProductServiceImpl implements ProductService{
                 productRepository::findByProductNameIgnoreCase,
                 Product::getProductId,
                 null,
-                "Category"
+                "Product"
         );
 
         Category category = categoryService.findById(categoryId);
 
-        product.setImage("defaul.png");
+        if (dto.image() != null) {
+            product.setImage(dto.image());
+        } else {
+            product.setImage("default.png");
+        }
+
         product.setCategory(category);
         Product savedProduct = productRepository.save(product);
         return productMapper.toResponse(savedProduct);
@@ -121,6 +138,20 @@ public class ProductServiceImpl implements ProductService{
         productRepository.delete(foundedProduct);
         return productMapper.toResponse(foundedProduct);
     }
+
+    @Override
+    public ProductResponseDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
+        Product foundedProduct = findById(productId);
+
+        String fileName = fileService.uploadImage(path, image);
+
+        foundedProduct.setImage(fileName);
+
+        Product updatedProduct = productRepository.save(foundedProduct);
+
+        return productMapper.toResponse(updatedProduct);
+    }
+
 
     public Product findById(Long productId) {
         return productRepository.findById(productId)

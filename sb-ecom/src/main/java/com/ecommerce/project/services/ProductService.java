@@ -5,6 +5,9 @@ import com.ecommerce.project.dtos.requests.ProductRequestDTO;
 import com.ecommerce.project.dtos.responses.ProductResponseDTO;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 public interface ProductService {
 
@@ -24,4 +27,6 @@ public interface ProductService {
     ProductResponseDTO update(Long productId, ProductRequestDTO dto);
 
     ProductResponseDTO delete(@NotNull Long productId);
+
+    ProductResponseDTO updateProductImage(Long productId, MultipartFile image) throws IOException;
 }

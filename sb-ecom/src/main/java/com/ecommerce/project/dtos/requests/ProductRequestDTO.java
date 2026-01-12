@@ -6,8 +6,6 @@ public record ProductRequestDTO(
                                 @NotBlank(message = "Product name is required.")
                                 @Size(min = 4, message = "Product name must have at least 4 characters.")
                                 String productName,
-
-                                @NotBlank(message = "Product image is required.")
                                 String image,
                                 String description,
 

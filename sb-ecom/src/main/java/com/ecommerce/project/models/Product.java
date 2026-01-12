@@ -15,11 +15,10 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productId;
 
+    @Column(unique = true)
     @NotBlank(message = "Product name is required.")
     @Size(min = 4, message = "Product name must have at least 4 characters.")
     private String productName;
-
-    @NotBlank(message = "Product image is required.")
     private String image;
     private String description;
     private Integer quantity;

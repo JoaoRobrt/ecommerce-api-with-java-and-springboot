@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +27,8 @@ public class Category {
 
     @Column(name = "category_name", nullable = false)
     @NotBlank(message = "Category name is required.")
-    @Size(min = 4, max = 10, message = "Category name must be between 4 and 10 characters.")
+    @Size(min = 4, max = 20, message = "Category name must be between 4 and 20 characters.")
+    //Possivelmente atualizarei para um Set, pois podera conter multiplas categorias
     private String categoryName;
 
     @PrePersist
