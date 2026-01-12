@@ -1,6 +1,6 @@
 spring:
   app:
-    jwtSecret: mySecretKey32134291067adbcAADLSOAmadnZXCvjhsasdZXCVasdfasda
+    jwtSecret: mySecretKeyZHVtbXlzZWNyZXRrZXltdXN0YmU2NGRieXRlcw==
     jwtExpirationMs: 86400000
   application:
     name: sb-ecom
