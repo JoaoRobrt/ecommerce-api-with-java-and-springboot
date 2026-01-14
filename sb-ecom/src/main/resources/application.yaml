@@ -2,6 +2,7 @@ spring:
   app:
     jwtSecret: mySecretKeyZHVtbXlzZWNyZXRrZXltdXN0YmU2NGRieXRlcw==
     jwtExpirationMs: 86400000
+    jwtCookieName: ecom_jwt_token
   application:
     name: sb-ecom
 
@@ -25,9 +26,9 @@ spring:
 #        format_sql: true
 project:
   image: images/
-
-logging:
-  level:
-    root: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate: ERROR
+#
+#logging:
+#  level:
+#    root: DEBUG
+#    org.springframework.web: DEBUG
+#    org.hibernate: ERROR

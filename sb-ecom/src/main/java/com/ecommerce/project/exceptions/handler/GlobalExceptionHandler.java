@@ -7,6 +7,8 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -75,7 +77,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ProblemDetail> handleIllegalArgument(
+    public ProblemDetail handleIllegalArgument(
             IllegalArgumentException ex,
             HttpServletRequest request
     ) {
@@ -84,12 +86,16 @@ public class GlobalExceptionHandler {
         problem.setDetail(ex.getMessage());
         problem.setProperty("path", request.getRequestURI());
 
-        return ResponseEntity.badRequest().body(problem);
+        return problem;
     }
 
     //ERRO INTERNO NÃO ESPERADO
     @ExceptionHandler(Exception.class)
-    public final ProblemDetail handleUnexpected(Exception e) {
+    public final ProblemDetail handleUnexpected(Exception e) throws Exception {
+        if (e instanceof AuthenticationException
+                || e instanceof AccessDeniedException) {
+            throw e;
+        }
 
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Internal server error");

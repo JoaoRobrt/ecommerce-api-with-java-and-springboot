@@ -14,7 +14,9 @@ import com.ecommerce.project.security.dtos.responses.UserAuthResponse;
 import com.ecommerce.project.security.jwt.JwtUtils;
 import com.ecommerce.project.security.services.UserDetailsImpl;
 import com.ecommerce.project.services.AuthService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,11 +33,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private PasswordEncoder passwordEncoder;
-    private AuthenticationManager authenticationManager;
-    private JwtUtils jwtUtils;
-    private UserRepository userRepository;
-    private RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
     @Override
     public UserAuthResponse login(LoginRequest loginRequest) {
@@ -49,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
+        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
 
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -57,13 +59,14 @@ public class AuthServiceImpl implements AuthService {
 
         return new UserAuthResponse(
                 userDetails.getId(),
-                jwtToken,
                 userDetails.getUsername(),
-                roles);
+                roles,
+                jwtCookie);
     }
 
+    @Transactional
     @Override
-    public UserResponseDTO signup(SignupRequest signupRequest) {
+    public UserResponseDTO register(SignupRequest signupRequest) {
         if (userRepository.existsByUsername(signupRequest.username())){
             throw new ResourceAlreadyExistsException("Username is already taken.");
         }
@@ -78,56 +81,64 @@ public class AuthServiceImpl implements AuthService {
         );
 
         Set<String> strRoles = signupRequest.role();
+        Set<Role> roles = new HashSet<>();
 
-        Set<Role> roles = getRolesFromStrings(strRoles);
+        if (strRoles == null || strRoles.isEmpty()) {
+            Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
+                    .orElseThrow(() -> new ResourceNotFoundException("Role ROLE_USER not found"));
+            roles.add(userRole);
+        } else {
+            for (String r : strRoles) {
+                AppRole appRole = switch (r.toLowerCase()) {
+                    case "admin" -> AppRole.ROLE_ADMIN;
+                    case "seller" -> AppRole.ROLE_SELLER;
+                    case "user" -> AppRole.ROLE_USER;
+                    default -> throw new IllegalArgumentException("Role " + r + " is not valid");
+                };
+                Role role = roleRepository.findByRoleName(appRole)
+                        .orElseThrow(() -> new ResourceNotFoundException("Role " + appRole + " not found"));
+
+                // Garante que a entidade está gerenciada
+                roles.add(roleRepository.getReferenceById(role.getRoleId()));
+            }
+        }
 
         user.setRoles(roles);
         User saved = userRepository.save(user);
 
+
         return new UserResponseDTO(
                 saved.getUserId(),
                 saved.getUsername(),
-                saved.getEmail());
+                saved.getEmail(),
+                roles.stream()
+                .map(role -> role.getRoleName().name())
+                .toList());
     }
 
-    private Set<Role> getRolesFromStrings(Set<String> strRoles) {
-        List<Role> allRoles = roleRepository.findAll();
+    @Override
+    public UserResponseDTO getUserResponse(UserDetailsImpl userDetails) {
+        if(userDetails == null) return null;
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
 
-        Set<Role> roles = new HashSet<>();
-
-        if (strRoles == null || strRoles.isEmpty()) {
-            Role userRole = allRoles.stream()
-                    .filter(r -> r.getRoleName() == AppRole.ROLE_USER)
-                    .findFirst()
-                    .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
-            roles.add(userRole);
-            return roles;
-        }
-
-        for (String role : strRoles) {
-            AppRole appRole;
-            switch (role.toLowerCase()) {
-                case "admin":
-                    appRole = AppRole.ROLE_ADMIN;
-                    break;
-                case "seller":
-                    appRole = AppRole.ROLE_SELLER;
-                    break;
-                case "user":
-                    appRole = AppRole.ROLE_USER;
-                    break;
-                default:
-                    throw new IllegalArgumentException("Role " + role + " is not valid");
-            }
-
-            Role matchedRole = allRoles.stream()
-                    .filter(r -> r.getRoleName() == appRole)
-                    .findFirst()
-                    .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
-
-            roles.add(matchedRole);
-        }
-
-        return roles;
+        return new UserResponseDTO(
+                userDetails.getId(),
+                userDetails.getUsername(),
+                userDetails.getEmail(),
+                roles);
     }
+    @Override
+    public String getUsername(Authentication authentication) {
+        if(authentication != null) return authentication.getName();
+        return "";
+    }
+
+    @Override
+    public ResponseCookie logout() {
+        return jwtUtils.getCleanJwtCookie();
+    }
+
+
 }
