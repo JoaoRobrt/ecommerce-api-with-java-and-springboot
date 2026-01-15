@@ -4,13 +4,15 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
 @Table(name = "products")
-@ToString
 public class Product {
 
     @Id
@@ -41,6 +43,10 @@ public class Product {
     @ManyToOne
     @JoinColumn(name = "seller_id")
     private User user;
+
+    @OneToMany(mappedBy = "product",
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<CartItem> products = new ArrayList<>();
 
     public void updateSpecialPrice() {
         if (this.price != null && this.discount != null) {

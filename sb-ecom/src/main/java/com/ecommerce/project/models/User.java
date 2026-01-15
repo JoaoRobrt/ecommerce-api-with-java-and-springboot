@@ -20,6 +20,7 @@ import java.util.Set;
         @UniqueConstraint( columnNames = "username"),
         @UniqueConstraint( columnNames = "email")
 })
+@ToString(exclude = {"cart", "products"})
 public class User {
 
     @Id
@@ -54,11 +55,12 @@ public class User {
                 inverseJoinColumns = @JoinColumn(name = "address_id"))
     private List<Address> addresses = new ArrayList<>();
 
-    @ToString.Exclude
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE},
                 orphanRemoval = true)
     private Set<Product> products = new HashSet<>();
 
+    @OneToOne(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE},   orphanRemoval = true)
+    private Cart cart;
 
     public User(String username,String email,String password) {
         this.username = username;
