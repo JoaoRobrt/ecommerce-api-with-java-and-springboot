@@ -1,4 +1,8 @@
 package com.ecommerce.project.dtos.responses;
 
-public record CartResponseDTO (Long id){
+import java.util.List;
+
+public record CartResponseDTO (Long cartId,
+                               Double totalPrice,
+                               List<ProductResponseDTO> products){
 }
