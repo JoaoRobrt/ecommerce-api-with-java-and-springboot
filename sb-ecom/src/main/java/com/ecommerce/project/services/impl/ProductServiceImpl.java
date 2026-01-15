@@ -4,8 +4,8 @@ import com.ecommerce.project.config.AppConstants;
 import com.ecommerce.project.dtos.commoms.PageResponseDTO;
 import com.ecommerce.project.dtos.requests.ProductRequestDTO;
 import com.ecommerce.project.dtos.responses.ProductResponseDTO;
-import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
-import com.ecommerce.project.exceptions.ResourceNotFoundException;
+import com.ecommerce.project.exceptions.api.ResourceAlreadyExistsException;
+import com.ecommerce.project.exceptions.api.ResourceNotFoundException;
 import com.ecommerce.project.mappers.ProductMapper;
 import com.ecommerce.project.models.Category;
 import com.ecommerce.project.models.Product;
@@ -143,7 +143,7 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.toResponse(updatedProduct);
     }
 
-
+    @Override
     public Product findById(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product Not Found."));

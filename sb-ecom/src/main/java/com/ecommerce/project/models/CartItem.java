@@ -1,6 +1,8 @@
 package com.ecommerce.project.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
 @Entity
@@ -27,4 +29,13 @@ public class CartItem {
     private Integer quantity;
     private Double discount;
     private Double productPrice;
+
+    public CartItem(Product product, Cart cart, Integer quantity, Double discount, Double price) {
+        this.product = product;
+        this.cart = cart;
+        this.quantity = quantity;
+        this.discount = discount;
+        this.productPrice = price;
+
+    }
 }

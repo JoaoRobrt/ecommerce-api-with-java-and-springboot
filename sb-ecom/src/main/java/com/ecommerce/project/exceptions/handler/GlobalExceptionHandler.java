@@ -1,12 +1,10 @@
 package com.ecommerce.project.exceptions.handler;
 
-import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
-import com.ecommerce.project.exceptions.ResourceNotFoundException;
+import com.ecommerce.project.exceptions.api.ApiException;
+import com.ecommerce.project.exceptions.domain.DomainException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,12 +17,22 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public final ProblemDetail handleNotFound(ResourceNotFoundException e){
+    @ExceptionHandler(ApiException.class)
+    public ProblemDetail handleApplication(ApiException ex) {
 
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-        problem.setTitle("Resource not found");
-        problem.setDetail(e.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatus());
+        problem.setTitle("Application error");
+        problem.setDetail(ex.getMessage());
+
+        return problem;
+    }
+
+    @ExceptionHandler(DomainException.class)
+    public ProblemDetail handleDomain(DomainException ex) {
+
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatus());
+        problem.setTitle("Business rule violation");
+        problem.setDetail(ex.getMessage());
 
         return problem;
     }
@@ -46,36 +54,6 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ProblemDetail handleConstraintViolation(ConstraintViolationException e) {
-
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        problem.setTitle("Invalid argument");
-        problem.setDetail("One or more validation errors occurred.");
-
-        Map<String, String> errors = new HashMap<>();
-
-        e.getConstraintViolations().forEach(violation -> {
-            String field = violation.getPropertyPath().toString();
-            String message = violation.getMessage();
-            errors.put(field, message);
-        });
-
-        problem.setProperty("errors", errors);
-
-        return problem;
-    }
-
-    @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public final ProblemDetail handleConflict(ResourceAlreadyExistsException e){
-
-        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
-        problem.setTitle("Resource conflict");
-        problem.setDetail(e.getMessage());
-
-        return problem;
-    }
-
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(
             IllegalArgumentException ex,
@@ -91,7 +69,7 @@ public class GlobalExceptionHandler {
 
     //ERRO INTERNO NÃO ESPERADO
     @ExceptionHandler(Exception.class)
-    public final ProblemDetail handleUnexpected(Exception e) throws Exception {
+    public final ProblemDetail handleUnexpected(Exception e, HttpServletRequest request) throws Exception {
         if (e instanceof AuthenticationException
                 || e instanceof AccessDeniedException) {
             throw e;
@@ -100,6 +78,7 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Internal server error");
         problem.setDetail("An unexpected error occurred, please try again later");
+        problem.setProperty("path", request.getRequestURI());
 
         return problem;
     }

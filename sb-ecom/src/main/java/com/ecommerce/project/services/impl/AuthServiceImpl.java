@@ -1,8 +1,8 @@
 package com.ecommerce.project.services.impl;
 
 import com.ecommerce.project.dtos.responses.UserResponseDTO;
-import com.ecommerce.project.exceptions.ResourceAlreadyExistsException;
-import com.ecommerce.project.exceptions.ResourceNotFoundException;
+import com.ecommerce.project.exceptions.api.ResourceAlreadyExistsException;
+import com.ecommerce.project.exceptions.api.ResourceNotFoundException;
 import com.ecommerce.project.models.AppRole;
 import com.ecommerce.project.models.Role;
 import com.ecommerce.project.models.User;
@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserResponseDTO register(SignupRequest signupRequest) {
         if (userRepository.existsByUsername(signupRequest.username())){
-            throw new ResourceAlreadyExistsException("Username is already taken.");
+            throw new ResourceAlreadyExistsException("Username");
         }
         if (userRepository.existsByEmail(signupRequest.email())){
             throw new ResourceAlreadyExistsException("Email is already taken.");
@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (strRoles == null || strRoles.isEmpty()) {
             Role userRole = roleRepository.findByRoleName(AppRole.ROLE_USER)
-                    .orElseThrow(() -> new ResourceNotFoundException("Role ROLE_USER not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Role ROLE_USER"));
             roles.add(userRole);
         } else {
             for (String r : strRoles) {
@@ -96,7 +96,7 @@ public class AuthServiceImpl implements AuthService {
                     default -> throw new IllegalArgumentException("Role " + r + " is not valid");
                 };
                 Role role = roleRepository.findByRoleName(appRole)
-                        .orElseThrow(() -> new ResourceNotFoundException("Role " + appRole + " not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Role " + appRole ));
 
                 // Garante que a entidade está gerenciada
                 roles.add(roleRepository.getReferenceById(role.getRoleId()));

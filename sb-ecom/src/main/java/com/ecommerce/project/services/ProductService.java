@@ -3,6 +3,7 @@ package com.ecommerce.project.services;
 import com.ecommerce.project.dtos.commoms.PageResponseDTO;
 import com.ecommerce.project.dtos.requests.ProductRequestDTO;
 import com.ecommerce.project.dtos.responses.ProductResponseDTO;
+import com.ecommerce.project.models.Product;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,4 +30,6 @@ public interface ProductService {
     ProductResponseDTO delete(@NotNull Long productId);
 
     ProductResponseDTO updateProductImage(Long productId, MultipartFile image) throws IOException;
+
+    Product findById(Long productId);
 }
