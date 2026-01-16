@@ -62,7 +62,6 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problem.setTitle("Invalid request parameter");
         problem.setDetail(ex.getMessage());
-        problem.setProperty("path", request.getRequestURI());
 
         return problem;
     }
@@ -78,7 +77,6 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Internal server error");
         problem.setDetail("An unexpected error occurred, please try again later");
-        problem.setProperty("path", request.getRequestURI());
 
         return problem;
     }

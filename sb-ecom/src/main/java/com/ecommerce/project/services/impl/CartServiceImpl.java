@@ -13,21 +13,23 @@ import com.ecommerce.project.services.CartItemService;
 import com.ecommerce.project.services.CartService;
 import com.ecommerce.project.services.ProductService;
 import com.ecommerce.project.utils.AuthUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final AuthUtil authUtil;
     private final ProductService productService;
-    private final CartItemRepository cartItemRepository;
+    private final CartItemService cartItemService;
     private final CartMapper cartMapper;
     private final ProductMapper productMapper;
-    private final CartItemService cartItemService;
 
     @Override
     public CartResponseDTO addProductToCart(Long productId, Integer quantity) {
@@ -37,7 +39,7 @@ public class CartServiceImpl implements CartService {
 
         CartItem cartItem = cartItemService.createCartItem(cart, product, quantity);
 
-        product.setQuantity(product.getQuantity());
+        cart.getCartItems().add(cartItem);
 
         cart.setTotalPrice(cart.getTotalPrice() + (product.getSpecialPrice() * quantity));
 
@@ -58,6 +60,23 @@ public class CartServiceImpl implements CartService {
         ).toList();
 
         return new CartResponseDTO(cart.getCartId(), cart.getTotalPrice(), productResponseDTOS);
+    }
+
+    @Override
+    public List<CartResponseDTO> findAll() {
+        List<Cart> carts = cartRepository.findAll();
+        return carts.stream().map(cart -> {
+
+            List<ProductResponseDTO> productResponseDTOS = cart.getCartItems()
+                    .stream()
+                    .map(cartItem -> productMapper.toResponse(cartItem.getProduct()))
+                    .toList();
+            return new CartResponseDTO(
+                    cart.getCartId(),
+                    cart.getTotalPrice(),
+                    productResponseDTOS
+            );
+        }).toList();
     }
 
     private Cart createCart(){

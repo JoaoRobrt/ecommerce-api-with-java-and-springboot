@@ -12,6 +12,7 @@ import com.ecommerce.project.repositories.CategoryRepository;
 import com.ecommerce.project.services.CategoryService;
 import com.ecommerce.project.utils.PaginationUtils;
 import com.ecommerce.project.utils.SortUtils;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +24,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CategoryServiceImpl implements CategoryService {
 
     private  final CategoryMapper categoryMapper;
@@ -44,6 +46,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponseDTO<CategoryResponseDTO> findAll(Integer pageNumber, Integer pageSize,
                                                         String sortBy, String sortOrder) {
 
@@ -79,7 +82,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     //METODOS INTERNOS
-
+    @Transactional(readOnly = true)
     public Category findById(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category Not Found."));
