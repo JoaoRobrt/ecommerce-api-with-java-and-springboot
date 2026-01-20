@@ -19,14 +19,22 @@ public class CartController {
     @PostMapping("cart/product/{productId}/quantity/{quantity}")
     public ResponseEntity<ApiResponse<CartResponseDTO>> addProductToCart(@PathVariable Long productId,
                                                                          @PathVariable Integer quantity){
-        CartResponseDTO cartDTO = cartService.addProductToCart(productId, quantity);
+        CartResponseDTO body = cartService.addProductToCart(productId, quantity);
 
-        return ResponseEntity.ok(ApiResponse.success("Product added to the cart", cartDTO));
+        return ResponseEntity.ok(ApiResponse.success("Product added to the cart", body));
     }
 
     @GetMapping("/cart")
     public ResponseEntity<ApiResponse<List<CartResponseDTO>>> getAllCarts(){
-        List<CartResponseDTO> dtos = cartService.findAll();
-        return ResponseEntity.ok(ApiResponse.success("All carts retrieved successfully", dtos));
+        List<CartResponseDTO> body = cartService.findAll();
+        return ResponseEntity.ok(ApiResponse.success("All carts retrieved successfully", body));
     }
+
+    @GetMapping("/cart/user")
+    public ResponseEntity<ApiResponse<CartResponseDTO>> getAuthUserCart(){
+        CartResponseDTO body = cartService.findUserCart();
+
+        return ResponseEntity.ok(ApiResponse.success("Authenticated user cart retrieved successfully", body));
+    }
+
 }

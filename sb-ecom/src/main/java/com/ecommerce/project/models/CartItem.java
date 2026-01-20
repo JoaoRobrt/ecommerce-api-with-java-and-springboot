@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter @Setter
 @NoArgsConstructor
@@ -27,15 +29,21 @@ public class CartItem {
     private Product product;
 
     private Integer quantity;
-    private Double discount;
-    private Double productPrice;
+    private BigDecimal discount;
+    private BigDecimal productPrice;
 
-    public CartItem(Product product, Cart cart, Integer quantity, Double discount, Double price) {
+    public CartItem(Product product, Cart cart, Integer quantity, BigDecimal discount, BigDecimal price) {
         this.product = product;
         this.cart = cart;
         this.quantity = quantity;
         this.discount = discount;
         this.productPrice = price;
 
+    }
+
+    public BigDecimal getSubtotal() {
+        return productPrice
+                .subtract(discount != null ? discount : BigDecimal.ZERO)
+                .multiply(BigDecimal.valueOf(quantity));
     }
 }

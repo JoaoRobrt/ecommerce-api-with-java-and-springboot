@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,12 +31,12 @@ public class Product {
 
     @NotNull(message = "Product price value is required.")
     @Positive(message = "Price must be greater than zero")
-    private Double price;
+    private BigDecimal price;
 
     @NotNull(message = "Product discount value is required.")
     @PositiveOrZero(message = "Discount can't be a negative number.")
-    private Double discount;
-    private Double specialPrice;
+    private BigDecimal discount;
+    private BigDecimal specialPrice;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -46,12 +48,21 @@ public class Product {
 
     @OneToMany(mappedBy = "product",
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<CartItem> products = new ArrayList<>();
+    private List<CartItem> cartItems = new ArrayList<>();
+
 
     public void updateSpecialPrice() {
-        if (this.price != null && this.discount != null) {
-            this.specialPrice = this.price - (this.price * (this.discount * 0.01));
+        if (price == null || discount == null) {
+            this.specialPrice = price;
+            return;
         }
+
+        BigDecimal discountPercentage = discount
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        BigDecimal discountValue = price.multiply(discountPercentage);
+
+        this.specialPrice = price.subtract(discountValue);
     }
 
     @PrePersist

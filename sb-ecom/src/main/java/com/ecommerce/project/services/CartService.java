@@ -8,4 +8,5 @@ public interface CartService {
 
     CartResponseDTO addProductToCart(Long productId, Integer quantity);
     List<CartResponseDTO> findAll();
+    CartResponseDTO findUserCart();
 }

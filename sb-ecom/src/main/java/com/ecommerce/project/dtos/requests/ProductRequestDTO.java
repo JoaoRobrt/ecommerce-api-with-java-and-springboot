@@ -2,6 +2,8 @@ package com.ecommerce.project.dtos.requests;
 
 import jakarta.validation.constraints.*;
 
+import java.math.BigDecimal;
+
 public record ProductRequestDTO(
                                 @NotBlank(message = "Product name is required.")
                                 @Size(min = 4, message = "Product name must have at least 4 characters.")
@@ -15,8 +17,8 @@ public record ProductRequestDTO(
 
                                 @NotNull(message = "Product price value is required.")
                                 @Positive(message = "Price must be greater than zero")
-                                Double price,
+                                BigDecimal price,
                                 @NotNull(message = "Product discount value is required.")
                                 @PositiveOrZero(message = "Discount can't be a negative number.")
-                                Double discount)  {
+                                BigDecimal discount)  {
 }
