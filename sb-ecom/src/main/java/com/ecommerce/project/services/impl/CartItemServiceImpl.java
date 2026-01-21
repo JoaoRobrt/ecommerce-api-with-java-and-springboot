@@ -61,16 +61,23 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     public Cart updateItemQuantity(Long cartItemId, Integer quantity) {
-        CartItem item = cartItemRepository.findById(cartItemId).orElseThrow(
-                () -> new ResourceNotFoundException("Cart item not found"));
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
         Long authUserId = authUtil.loggedInUserId();
-        if(!item.getCart().getUser().getUserId().equals(authUserId))
+        if (!item.getCart().getUser().getUserId().equals(authUserId))
             throw new AccessDeniedException("Cart item does not belong to authenticated user");
-        if(quantity <= 0){
+
+        Product product = item.getProduct();
+        int stock = product.getQuantity();
+
+        if (quantity <= 0) {
             item.getCart().removeItem(item);
             cartItemRepository.delete(item);
-        }else{
+        } else {
+            if (quantity > stock) {
+                throw new InsufficientStockException(quantity, stock);
+            }
             item.setQuantity(quantity);
         }
 

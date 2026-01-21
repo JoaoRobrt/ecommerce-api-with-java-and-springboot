@@ -2,7 +2,6 @@ package com.ecommerce.project.services.impl;
 
 import com.ecommerce.project.dtos.responses.CartItemResponseDTO;
 import com.ecommerce.project.dtos.responses.CartResponseDTO;
-import com.ecommerce.project.exceptions.api.ResourceNotFoundException;
 import com.ecommerce.project.exceptions.domain.stock.OutOfStockException;
 import com.ecommerce.project.mappers.CartItemMapper;
 import com.ecommerce.project.models.Cart;
