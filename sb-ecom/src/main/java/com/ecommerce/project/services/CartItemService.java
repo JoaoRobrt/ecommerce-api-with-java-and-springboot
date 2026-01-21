@@ -7,4 +7,6 @@ import com.ecommerce.project.models.Product;
 public interface CartItemService {
 
     CartItem createCartItem(Cart cart, Product product, Integer quantity);
+
+    Cart updateItemQuantity(Long cartItemId, Integer quantity);
 }

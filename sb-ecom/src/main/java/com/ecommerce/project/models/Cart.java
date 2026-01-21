@@ -41,4 +41,7 @@ public class Cart {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    public void removeItem(CartItem item) {
+        cartItems.remove(item);
+    }
 }

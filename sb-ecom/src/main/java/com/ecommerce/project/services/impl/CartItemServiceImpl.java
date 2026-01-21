@@ -1,14 +1,17 @@
 package com.ecommerce.project.services.impl;
 
-import com.ecommerce.project.exceptions.domain.cart.ProductAlreadyInCartException;
+import com.ecommerce.project.exceptions.api.ResourceNotFoundException;
 import com.ecommerce.project.exceptions.domain.stock.InsufficientStockException;
 import com.ecommerce.project.exceptions.domain.stock.OutOfStockException;
 import com.ecommerce.project.models.Cart;
 import com.ecommerce.project.models.CartItem;
 import com.ecommerce.project.models.Product;
 import com.ecommerce.project.repositories.CartItemRepository;
+import com.ecommerce.project.services.AuthService;
 import com.ecommerce.project.services.CartItemService;
+import com.ecommerce.project.utils.AuthUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,6 +19,8 @@ import org.springframework.stereotype.Service;
 public class CartItemServiceImpl implements CartItemService {
 
     private final CartItemRepository cartItemRepository;
+    private final AuthService authService;
+    private final AuthUtil authUtil;
 
     @Override
     public CartItem createCartItem(Cart cart, Product product, Integer quantity) {
@@ -52,5 +57,24 @@ public class CartItemServiceImpl implements CartItemService {
         );
 
         return cartItemRepository.save(newCartItem);
+    }
+
+    @Override
+    public Cart updateItemQuantity(Long cartItemId, Integer quantity) {
+        CartItem item = cartItemRepository.findById(cartItemId).orElseThrow(
+                () -> new ResourceNotFoundException("Cart item not found"));
+
+        Long authUserId = authUtil.loggedInUserId();
+        if(!item.getCart().getUser().getUserId().equals(authUserId))
+            throw new AccessDeniedException("Cart item does not belong to authenticated user");
+        if(quantity <= 0){
+            item.getCart().removeItem(item);
+            cartItemRepository.delete(item);
+        }else{
+            item.setQuantity(quantity);
+        }
+
+        item.getCart().recalculateTotalPrice();
+        return item.getCart();
     }
 }
