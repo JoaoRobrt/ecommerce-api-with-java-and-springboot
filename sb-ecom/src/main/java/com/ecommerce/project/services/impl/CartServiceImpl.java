@@ -3,6 +3,7 @@ package com.ecommerce.project.services.impl;
 import com.ecommerce.project.dtos.responses.CartItemResponseDTO;
 import com.ecommerce.project.dtos.responses.CartResponseDTO;
 import com.ecommerce.project.exceptions.api.ResourceNotFoundException;
+import com.ecommerce.project.exceptions.domain.stock.OutOfStockException;
 import com.ecommerce.project.mappers.CartItemMapper;
 import com.ecommerce.project.models.Cart;
 import com.ecommerce.project.models.CartItem;
@@ -31,11 +32,28 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartResponseDTO addProductToCart(Long productId, Integer quantity) {
         Cart cart = getOrCreateUserCart();
-
         Product product = productService.findById(productId);
-        CartItem cartItem = cartItemService.createCartItem(cart, product, quantity);
 
-        cart.getCartItems().add(cartItem);
+        int currentQuantity = cart.getCartItems().stream()
+                .filter(item -> item.getProduct().getProductId().equals(productId))
+                .map(CartItem::getQuantity)
+                .findFirst()
+                .orElse(0);
+
+        if (currentQuantity + quantity > product.getQuantity()) {
+            throw new OutOfStockException("Not enough stock available");
+        }
+
+        CartItem existingItem = cart.getCartItems().stream()
+                .filter(item -> item.getProduct().getProductId().equals(productId))
+                .findFirst()
+                .orElse(null);
+        if (existingItem != null) {
+            existingItem.setQuantity(existingItem.getQuantity() + quantity);
+        } else {
+            CartItem cartItem = cartItemService.createCartItem(cart, product, quantity);
+            cart.getCartItems().add(cartItem);
+        }
         cart.recalculateTotalPrice();
         cartRepository.save(cart);
 
@@ -67,8 +85,7 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional(readOnly = true)
     public CartResponseDTO findUserCart() {
-        Cart cart = cartRepository.findByUserIdWithItems(authUtil.loggedInUserId());
-        if(cart == null) throw new ResourceNotFoundException("User cart not found");
+        Cart cart = getOrCreateUserCart();
         List<CartItemResponseDTO> itemsDTOs = cart.getCartItems().stream().map(cartItemMapper :: toDTO).toList();
         return new CartResponseDTO(cart.getCartId(), cart.getTotalPrice(), itemsDTOs);
     }
@@ -80,10 +97,17 @@ public class CartServiceImpl implements CartService {
         return new CartResponseDTO(cart.getCartId(), cart.getTotalPrice(), itemsDTOs);
     }
 
-    private Cart getOrCreateUserCart(){
-        Cart userCart = cartRepository.findByUserIdWithItems(authUtil.loggedInUserId());
-        if(userCart != null)
-            return userCart;
+    private Cart getOrCreateUserCart() {
+        Long userId = authUtil.loggedInUserId();
+
+        Cart existingCart = cartRepository.findByUserIdWithItems(userId);
+        if (existingCart != null) {
+            return existingCart;
+        }
+        if (cartRepository.existsByUserId(userId)) {
+            return cartRepository.findByUserIdWithItems(userId);
+        }
+
         Cart cart = new Cart();
         cart.setUser(authUtil.loggedInUser());
         return cartRepository.save(cart);
