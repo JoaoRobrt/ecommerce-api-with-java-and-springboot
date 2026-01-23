@@ -6,7 +6,6 @@ import com.ecommerce.project.dtos.responses.CartResponseDTO;
 import com.ecommerce.project.services.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +45,12 @@ public class CartController {
     ){
       CartResponseDTO body = cartService.updateItemQuantity(cartItemId, request.quantity());
       return ResponseEntity.ok(ApiResponse.success("Cart Item updated", body));
+    }
+
+    @DeleteMapping("/cart/item/{cartItemId}")
+    public ResponseEntity<ApiResponse<CartResponseDTO>> deleteItemFromCart(@PathVariable Long cartItemId){
+        CartResponseDTO body = cartService.deleteItemFromCart(cartItemId);
+        return ResponseEntity.ok(ApiResponse.success("Item deleted successfully", body));
     }
 
 }

@@ -9,4 +9,6 @@ public interface CartItemService {
     CartItem createCartItem(Cart cart, Product product, Integer quantity);
 
     Cart updateItemQuantity(Long cartItemId, Integer quantity);
+
+    Cart deleteCartItem(Long cartItemId);
 }

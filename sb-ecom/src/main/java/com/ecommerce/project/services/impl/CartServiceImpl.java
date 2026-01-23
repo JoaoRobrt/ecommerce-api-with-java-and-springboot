@@ -82,6 +82,13 @@ public class CartServiceImpl implements CartService {
         return new CartResponseDTO(cart.getCartId(), cart.getTotalPrice(), itemsDTOs);
     }
 
+    @Override
+    public CartResponseDTO deleteItemFromCart(Long cartItemId) {
+        Cart cart = cartItemService.deleteCartItem(cartItemId);
+        List<CartItemResponseDTO> itemsDTOs = cart.getCartItems().stream().map(cartItemMapper :: toDTO).toList();
+        return new CartResponseDTO(cart.getCartId(), cart.getTotalPrice(), itemsDTOs);
+    }
+
     private Cart getOrCreateUserCart() {
         Cart cart = cartRepository.findCartByUserId(authUtil.loggedInUserId());
         if (cart != null) return cart;

@@ -1,7 +1,6 @@
 package com.ecommerce.project.services;
 
 import com.ecommerce.project.dtos.responses.CartResponseDTO;
-import jakarta.validation.constraints.Min;
 
 import java.util.List;
 
@@ -12,4 +11,6 @@ public interface CartService {
     CartResponseDTO findUserCart();
 
     CartResponseDTO updateItemQuantity(Long cartItemId,Integer quantity);
+
+    CartResponseDTO deleteItemFromCart(Long cartItemId);
 }

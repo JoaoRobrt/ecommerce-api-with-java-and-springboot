@@ -84,4 +84,28 @@ public class CartItemServiceImpl implements CartItemService {
 
         return item.getCart();
     }
+
+    @Override
+    @Transactional
+    public Cart deleteCartItem(Long cartItemId) {
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+
+        Long authUserId = authUtil.loggedInUserId();
+        Cart cart = item.getCart();
+
+        if (!cart.getUser().getUserId().equals(authUserId)) {
+            throw new AccessDeniedException("Cart item does not belong to authenticated user");
+        }
+
+        cart.removeItem(item);
+        cartItemRepository.delete(item);
+        cartItemRepository.flush();
+
+        cart.recalculateTotalPrice();
+
+        return cart;
+    }
+
+
 }
