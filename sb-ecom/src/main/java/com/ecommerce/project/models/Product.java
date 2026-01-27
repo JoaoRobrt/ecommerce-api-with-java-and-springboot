@@ -46,11 +46,6 @@ public class Product {
     @JoinColumn(name = "seller_id")
     private User user;
 
-    @OneToMany(mappedBy = "product",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch = FetchType.EAGER, orphanRemoval = true)
-    private List<CartItem> cartItems = new ArrayList<>();
-
-
     public void updateSpecialPrice() {
         if (price == null || discount == null) {
             this.specialPrice = price;

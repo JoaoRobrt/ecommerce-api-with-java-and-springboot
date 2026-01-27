@@ -9,6 +9,7 @@ import lombok.*;
 @Getter @Setter
 @EqualsAndHashCode
 @ToString(exclude = {"roleName"})
+@Table(name = "roles")
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

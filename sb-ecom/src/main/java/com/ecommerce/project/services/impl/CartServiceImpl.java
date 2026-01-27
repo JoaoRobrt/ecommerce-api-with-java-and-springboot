@@ -2,8 +2,6 @@ package com.ecommerce.project.services.impl;
 
 import com.ecommerce.project.dtos.responses.CartItemResponseDTO;
 import com.ecommerce.project.dtos.responses.CartResponseDTO;
-import com.ecommerce.project.exceptions.api.ResourceNotFoundException;
-import com.ecommerce.project.exceptions.domain.stock.OutOfStockException;
 import com.ecommerce.project.mappers.CartItemMapper;
 import com.ecommerce.project.models.Cart;
 import com.ecommerce.project.models.CartItem;
@@ -70,7 +68,6 @@ public class CartServiceImpl implements CartService {
     @Transactional(readOnly = true)
     public CartResponseDTO findUserCart() {
         Cart cart = getOrCreateUserCart();
-
         List<CartItemResponseDTO> itemsDTOs = cart.getCartItems().stream().map(cartItemMapper :: toDTO).toList();
         return new CartResponseDTO(cart.getCartId(), cart.getTotalPrice(), itemsDTOs);
     }
@@ -83,6 +80,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public CartResponseDTO deleteItemFromCart(Long cartItemId) {
         Cart cart = cartItemService.deleteCartItem(cartItemId);
         List<CartItemResponseDTO> itemsDTOs = cart.getCartItems().stream().map(cartItemMapper :: toDTO).toList();

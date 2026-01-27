@@ -9,9 +9,10 @@ import java.math.BigDecimal;
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 @Table(name = "cart_items")
 @ToString
+// TODO: Refatorar CartItem para snapshot de produto (price, name, discount)
+// Atualmente acoplado a Product
 public class CartItem {
 
     @Id

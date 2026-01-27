@@ -20,4 +20,5 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Cart c WHERE c.user.userId = :userId")
     boolean existsByUserId(@Param("userId") Long userId);
+
 }

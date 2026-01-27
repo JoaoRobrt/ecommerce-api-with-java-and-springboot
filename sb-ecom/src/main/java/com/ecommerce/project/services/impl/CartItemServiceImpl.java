@@ -9,13 +9,16 @@ import com.ecommerce.project.models.Product;
 import com.ecommerce.project.repositories.CartItemRepository;
 import com.ecommerce.project.services.CartItemService;
 import com.ecommerce.project.utils.AuthUtil;
-import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CartItemServiceImpl implements CartItemService {
 
     private final CartItemRepository cartItemRepository;
@@ -56,7 +59,6 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    @Transactional
     public Cart updateItemQuantity(Long cartItemId, Integer quantity) {
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
@@ -70,7 +72,6 @@ public class CartItemServiceImpl implements CartItemService {
 
         if (quantity <= 0) {
             item.getCart().removeItem(item);
-            cartItemRepository.delete(item);
         } else {
 
             if (quantity > stock) {
@@ -86,7 +87,6 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    @Transactional
     public Cart deleteCartItem(Long cartItemId) {
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
@@ -99,8 +99,6 @@ public class CartItemServiceImpl implements CartItemService {
         }
 
         cart.removeItem(item);
-        cartItemRepository.delete(item);
-        cartItemRepository.flush();
 
         cart.recalculateTotalPrice();
 

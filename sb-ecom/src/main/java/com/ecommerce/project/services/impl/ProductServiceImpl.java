@@ -4,12 +4,14 @@ import com.ecommerce.project.config.AppConstants;
 import com.ecommerce.project.dtos.commoms.PageResponseDTO;
 import com.ecommerce.project.dtos.requests.ProductRequestDTO;
 import com.ecommerce.project.dtos.responses.ProductResponseDTO;
+
 import com.ecommerce.project.exceptions.api.ResourceAlreadyExistsException;
 import com.ecommerce.project.exceptions.api.ResourceNotFoundException;
 import com.ecommerce.project.mappers.ProductMapper;
 import com.ecommerce.project.models.Category;
 import com.ecommerce.project.models.Product;
 import com.ecommerce.project.repositories.ProductRepository;
+import com.ecommerce.project.services.CartService;
 import com.ecommerce.project.services.CategoryService;
 import com.ecommerce.project.services.FileService;
 import com.ecommerce.project.services.ProductService;
